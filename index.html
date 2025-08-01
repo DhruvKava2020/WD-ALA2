@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALA 2</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<script>
+let car;
+let road;
+let clouds = [];
+let trees = [];
+let hills = [];
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  car = new Car();
+  road = new Road();
+  // Create clouds
+  for (let i = 0; i < 5; i++) {
+    clouds.push(new Cloud());
+  }
+  // Create trees
+  for (let i = 0; i < 10; i++) {
+    trees.push(new Tree());
+  }
+  // Create hills
+  for (let i = 0; i < 5; i++) {
+    hills.push(new Hill());
+  }
+}
+
+function draw() {
+  // Draw sky
+  background(135, 206, 235);
+  // Draw name and enrollment number
+  fill(255);
+  textSize(24);
+  textAlign(LEFT, TOP);
+  textFont('Arial');
+  text("Name: Dhruv Kava", 10, 10); 
+  text("Enrollment Number: 240905040040", 10, 40); 
+  // Draw clouds
+  for (let cloud of clouds) {
+    cloud.update();
+    cloud.display();
+  }
+  // Draw hills
+  for (let hill of hills) {
+    hill.display();
+  }
+  // Draw road
+  road.display();
+  // Draw trees
+  for (let tree of trees) {
+    tree.display();
+  }
+  // Draw car
+  car.update();
+  car.display();
+  // Draw instruction text if car hasn't started
+  if (!car.hasStarted) {
+    fill(255, 255, 255, 200);
+    textSize(32);
+    textAlign(CENTER, CENTER);
+    textFont('Arial');
+    text("Tap and hold to start", width / 2, height / 2);
+  }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+class Car {
+  constructor() {
+    this.x = -50; // Start at point A (off-screen left)
+    this.y = height - 100;
+    this.speed = 5;
+    this.width = 80;
+    this.height = 40;
+    this.isMoving = false;
+    this.hasStarted = false;
+  }
+
+  update() {
+    // Move only when screen is pressed
+    if (this.isMoving && this.x < width + 50) { // Stop at point B (right edge)
+      this.x += this.speed;
+      this.hasStarted = true; // Mark as started once moving
+    }
+  }
+
+  display() {
+    push();
+    translate(this.x, this.y);
+    // Car body
+    fill(255, 0, 0);
+    rect(-this.width / 2, -this.height / 2, this.width, this.height, 10);
+    // Windows
+    fill(0, 191, 255);
+    rect(-this.width / 3, -this.height / 2 - 5, this.width / 3, this.height / 2 - 5, 5);
+    rect(0, -this.height / 2 - 5, this.width / 3, this.height / 2 - 5, 5);
+    // Wheels
+    fill(0);
+    circle(-this.width / 3, this.height / 2, 20);
+    circle(this.width / 3, this.height / 2, 20);
+    // Wheel hubs
+    fill(200);
+    circle(-this.width / 3, this.height / 2, 10);
+    circle(this.width / 3, this.height / 2, 10);
+    pop();
+  }
+}
+
+function mousePressed() {
+  car.isMoving = true;
+}
+
+function mouseReleased() {
+  car.isMoving = false;
+}
+
+function touchStarted() {
+  car.isMoving = true;
+  return false; // Prevent default touch behavior
+}
+
+function touchEnded() {
+  car.isMoving = false;
+  return false;
+}
+
+class Road {
+  constructor() {
+    this.y = height - 100;
+    this.width = width * 2;
+  }
+
+  display() {
+    // Road
+    fill(50);
+    rect(0, this.y, this.width, 100);
+    // Lane markings
+    fill(255, 255, 0);
+    for (let x = -width / 2; x < this.width; x += 100) {
+      rect(x - (car.x > 0 ? car.x / 2 : 0), this.y + 40, 50, 10);
+    }
+  }
+}
+
+class Cloud {
+  constructor() {
+    this.x = random(width);
+    this.y = random(50, height / 3);
+    this.size = random(50, 100);
+    this.speed = random(0.5, 1.5);
+  }
+
+  update() {
+    this.x += this.speed;
+    if (this.x > width + this.size) {
+      this.x = -this.size;
+      this.y = random(50, height / 3);
+    }
+  }
+
+  display() {
+    fill(255, 240);
+    noStroke();
+    ellipse(this.x, this.y, this.size, this.size / 2);
+    ellipse(this.x + this.size / 3, this.y - this.size / 4, this.size / 1.5, this.size / 3);
+    ellipse(this.x - this.size / 3, this.y - this.size / 4, this.size / 1.5, this.size / 3);
+  }
+}
+
+class Tree {
+  constructor() {
+    this.x = random(-width, width * 2);
+    this.y = height - 150;
+    this.size = random(30, 60);
+  }
+
+  display() {
+    push();
+    translate(this.x - (car.x > 0 ? car.x / 2 : 0), this.y);
+    // Trunk
+    fill(139, 69, 19);
+    rect(-10, 0, 20, 50);
+    // Leaves
+    fill(0, 128, 0);
+    ellipse(0, -this.size / 2, this.size, this.size);
+    pop();
+  }
+}
+
+class Hill {
+  constructor() {
+    this.x = random(-width, width * 2);
+    this.height = random(100, 200);
+  }
+
+  display() {
+    push();
+    translate(this.x - (car.x > 0 ? car.x / 2 : 0), height - 100);
+    fill(34, 139, 34);
+    beginShape();
+    vertex(-100, 0);
+    vertex(0, -this.height);
+    vertex(100, 0);
+    endShape(CLOSE);
+    pop();
+  }
+}
+</script>
+</body>
+</html>
